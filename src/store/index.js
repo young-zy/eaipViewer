@@ -43,7 +43,11 @@ export const useSettingsStore = defineStore('settings', () => {
 
 export const useContentStore = defineStore('contentStore', () => {
 
+	const settingsStore = useSettingsStore();
+
 	const filePath = ref('');
+
+	const fileEnPath = ref('');
 
 	const isEmpty = computed(() => {
 		return !filePath.value;
@@ -53,7 +57,7 @@ export const useContentStore = defineStore('contentStore', () => {
 
 	const contentType = ref('')
 
-	function setContent(newPath, newType) {
+	function setContent(newPath, newEnPath, newType) {
 		if (newPath === '') {
 			filePath.value = newPath;
 			contentType.value = '';
@@ -63,6 +67,7 @@ export const useContentStore = defineStore('contentStore', () => {
 			throw new Error('contentType not valid');
 		}
 		filePath.value = newPath;
+		fileEnPath.value = newEnPath;
 		contentType.value = newType;
 	}
 
@@ -71,8 +76,11 @@ export const useContentStore = defineStore('contentStore', () => {
 	})
 
 	const currentFilePath = computed(() => {
+		if (settingsStore.currentLanguage === 'en') {
+			return fileEnPath.value;
+		}
 		return filePath.value;
 	})
 
-	return {isEmpty, currentFilePath, currentType, setContent, contentType};
+	return {isEmpty, currentFilePath, currentType, setContent};
 })

@@ -1,5 +1,5 @@
 <script setup>
-	import { onMounted, ref, watch, computed, nextTick } from "vue";
+	import { onMounted, ref, watch, computed } from "vue";
 	import { extractVarFromJs, listToTDesignTree } from "@/util/util.js";
 	import { useContentStore, useSettingsStore } from "@/store/index.js";
 	import { useRoute, useRouter } from "vue-router";
@@ -28,15 +28,17 @@
 	const checkAndSetContent = (node) => {
 		if (node && node.data) {
 			console.log("node: ",node)
-			let contentPath, type;
+			let contentPath, contentEnPath, type;
 			if (node.data.htmlPath) {
 				contentPath = node.data.htmlPath
+				contentEnPath = node.data.htmlEnPath
 				type = 'html'
 			} else {
 				contentPath = node.data.pdfPath
+				contentEnPath = node.data.pdfPath
 				type = 'pdf'
 			}
-			contentStore.setContent(contentPath, type)
+			contentStore.setContent(contentPath, contentEnPath, type)
 			router.push({ name: route.name, params: {id: node.data.id} })
 		}
 	}
@@ -110,6 +112,12 @@
 				}
 			}
 	)
+
+	watch(() => settingsStore.currentLanguage, (newVal, oldVal) => {
+		if (newVal !== oldVal) {
+			console.log("language", newVal, oldVal)
+		}
+	})
 
 	const loadData = async (url, varName) => {
 		const resp = await fetch(url)

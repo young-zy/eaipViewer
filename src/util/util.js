@@ -1,7 +1,7 @@
 
 export function extractVarFromJs(jsText, varName) {
-	let arr= (new RegExp(`var ${varName}\s*=\s*((.|\n)*)`,"gm").exec(jsText));
-	return JSON.parse(arr[1])
+	const jsonText = jsText.replace(`var ${varName}=`, '');
+	return JSON.parse(jsonText)
 }
 
 export function listToTDesignTree(arr) {
@@ -10,8 +10,6 @@ export function listToTDesignTree(arr) {
 	arr.forEach((item) => {
 		m.set(item.id, item);
 		item.children = [];
-		item.value = item.id;
-		item.label = item.name_cn;
 	});
 	arr.forEach((item) => {
 		if (item.pId === "" || !m.has(item.pId)) {

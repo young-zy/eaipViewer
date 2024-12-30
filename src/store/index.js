@@ -40,3 +40,39 @@ export const useSettingsStore = defineStore('settings', () => {
 
 	return { currentTheme, currentLanguage, setTheme, setLanguage };
 })
+
+export const useContentStore = defineStore('contentStore', () => {
+
+	const filePath = ref('');
+
+	const isEmpty = computed(() => {
+		return !filePath.value;
+	})
+
+	const validType = ['pdf', 'html'];
+
+	const contentType = ref('')
+
+	function setContent(newPath, newType) {
+		if (newPath === '') {
+			filePath.value = newPath;
+			contentType.value = '';
+			return
+		}
+		if (!validType.includes(newType)) {
+			throw new Error('contentType not valid');
+		}
+		filePath.value = newPath;
+		contentType.value = newType;
+	}
+
+	const currentType = computed(() => {
+		return contentType.value;
+	})
+
+	const currentFilePath = computed(() => {
+		return filePath.value;
+	})
+
+	return {isEmpty, currentFilePath, currentType, setContent, contentType};
+})

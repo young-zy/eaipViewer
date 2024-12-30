@@ -1,10 +1,15 @@
 <script setup>
 import FileTree from "@/components/FileTree.vue";
 import { Icon } from "tdesign-icons-vue-next";
-import {useSettingsStore} from "@/store/index.js"
-import {ref} from "vue"
+import { useSettingsStore } from "@/store/index.js"
+import { computed } from "vue"
+import MainFrame from "@/components/MainFrame.vue";
+import { useRoute, useRouter } from "vue-router";
 
 const settingsStore = useSettingsStore()
+
+const router = useRouter();
+const route = useRoute();
 
 const themeChange = (e) => {
 	console.log("themeChange", e);
@@ -12,73 +17,138 @@ const themeChange = (e) => {
 }
 
 const languageChange = (e) => {
-	console.log("laguageChange", e);
+	console.log("languageChange", e);
 	settingsStore.setLanguage(e)
 }
 
-const menuValue = ref("")
+const menuValue = computed(() => {
+	return route.name
+})
+
+const menuChanged = (e) => {
+	console.log("menuChanged", e);
+	router.push({name:e, params: {  } })
+}
 
 </script>
 
 <template>
-	<t-layout>
-		<t-header>
-			<t-head-menu v-model="menuValue" height="120px" expand-type="popup">
-				<template #logo>
-					<img width="136" class="logo" :src="'../img/logo-copy.6608b40d.png'" alt="logo" />
-				</template>
-				<t-submenu value="/AIP">
-					<template #title>
-						<span>AIP</span>
-					</template>
-					<t-menu-item value="/AIP/GEN"> GEN </t-menu-item>
-					<t-menu-item value="/AIP/ENR"> ENR </t-menu-item>
-					<t-menu-item value="/AIP/AD"> AD </t-menu-item>
-				</t-submenu>
-				<t-menu-item value="/AMDT"> AMDT </t-menu-item>
-				<t-menu-item value="/SUPs"> SUPs </t-menu-item>
-				<t-menu-item value="/AICs"> AICs </t-menu-item>
-				<t-menu-item value="/NOTAM"> NOTAM </t-menu-item>
-				<template #operations>
-					<div class="language-picker">
-						<t-radio-group :value="settingsStore.currentLanguage" @change="languageChange" variant="default-filled" default-value="light">
-							<t-radio-button value="cn">
-								中文
-							</t-radio-button>
-							<t-radio-button value="en">
-								English
-							</t-radio-button>
-						</t-radio-group>
-					</div>
-					<div class="theme-picker">
-						<t-radio-group :value="settingsStore.currentTheme" @change="themeChange" variant="default-filled" default-value="light">
-							<t-radio-button value="light">
-								<icon name="sunny-filled" size="medium" :color="settingsStore.currentTheme === 'light' ? 'rgb(255, 189, 46)' : null" />
-							</t-radio-button>
-							<t-radio-button value="dark">
-								<icon name="moon-filled" size="medium" :color="settingsStore.currentTheme === 'dark' ? 'white' : null"/>
-							</t-radio-button>
-						</t-radio-group>
-					</div>
-				</template>
-			</t-head-menu>
-		</t-header>
-		<t-layout>
-			<t-aside style="border-top: 1px solid var(--component-border)" overflow="auto">
-				<FileTree style="width: 100%; height: 100%; "></FileTree>
-			</t-aside>
-			<t-layout>
-				<t-content>
-					<div>Content</div>
-				</t-content>
-				<t-footer>Copyright @ 2019-{{ new Date().getFullYear() }} Tencent. All Rights Reserved</t-footer>
-			</t-layout>
-		</t-layout>
-	</t-layout>
+  <t-layout>
+    <t-header>
+      <t-head-menu
+        :value="menuValue?.toString()"
+        height="120px"
+        expand-type="popup"
+        @change="menuChanged"
+      >
+        <template #logo>
+          <img
+            width="136"
+            class="logo"
+            :src="'../img/logo-copy.6608b40d.png'"
+            alt="logo"
+          >
+        </template>
+        <t-submenu value="AIP">
+          <template #title>
+            <span>AIP</span>
+          </template>
+          <t-menu-item value="GEN">
+            GEN
+          </t-menu-item>
+          <t-menu-item value="ENR">
+            ENR
+          </t-menu-item>
+          <t-menu-item value="AD">
+            AD
+          </t-menu-item>
+        </t-submenu>
+        <t-menu-item value="AMDT">
+          AMDT
+        </t-menu-item>
+        <t-menu-item value="SUPs">
+          SUPs
+        </t-menu-item>
+        <t-menu-item value="AICs">
+          AICs
+        </t-menu-item>
+        <t-menu-item value="NOTAM">
+          NOTAM
+        </t-menu-item>
+        <template
+          #operations
+        >
+          <div class="language-picker">
+            <t-radio-group
+              :value="settingsStore.currentLanguage"
+              variant="default-filled"
+              default-value="light"
+              @change="languageChange"
+            >
+              <t-radio-button value="cn">
+                中文
+              </t-radio-button>
+              <t-radio-button value="en">
+                English
+              </t-radio-button>
+            </t-radio-group>
+          </div>
+          <div class="theme-picker">
+            <t-radio-group
+              :value="settingsStore.currentTheme"
+              variant="default-filled"
+              default-value="light"
+              @change="themeChange"
+            >
+              <t-radio-button value="light">
+                <icon
+                  name="sunny-filled"
+                  size="medium"
+                  :color="settingsStore.currentTheme === 'light' ? 'rgb(255, 189, 46)' : null"
+                />
+              </t-radio-button>
+              <t-radio-button value="dark">
+                <icon
+                  name="moon-filled"
+                  size="medium"
+                  :color="settingsStore.currentTheme === 'dark' ? 'white' : null"
+                />
+              </t-radio-button>
+            </t-radio-group>
+          </div>
+        </template>
+      </t-head-menu>
+    </t-header>
+    <t-layout>
+      <t-aside
+        class="aside"
+        style="border-top: 1px solid var(--component-border);"
+      >
+        <FileTree />
+      </t-aside>
+      <t-layout>
+        <t-content>
+          <MainFrame />
+        </t-content>
+        <t-footer>Copyright @ 2024-{{ new Date().getFullYear() }}. All Rights Reserved</t-footer>
+      </t-layout>
+    </t-layout>
+  </t-layout>
 </template>
 
 <style scoped lang="less">
 	.language-picker {
 		margin-right: 8px;
+	}
+
+	.aside {
+		display: flex;
+		height: calc(100vh - 57px);
+		max-width: 232px;
+		overflow: auto;
+	}
+
+	:deep(.t-menu__operations){
+		min-width: 260px;
 	}
 </style>

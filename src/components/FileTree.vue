@@ -88,6 +88,9 @@
 						}
 					})
 					await nextTick();
+					if (node) {
+						scrollTo(node)
+					}
 					// treeInstance.value.scrollTo({key: route.params.id})
 					// console.log('scrolled');
 					checkAndSetContent(node)
@@ -111,8 +114,10 @@
 							expanded.value.push(item.data.id);
 						}
 					});
-					// await nextTick();
-					// treeInstance.value.scrollTo({key: id});
+					await nextTick();
+					if (node) {
+						scrollTo(node)
+					}
 					console.log('scrolled');
 					checkAndSetContent(node)
 				}
@@ -133,6 +138,19 @@
 			data.value = listToTDesignTree(extractVarFromJs(js, varName));
 			loading.value = false;
 		}
+	}
+
+	// window.updateTree = () => {
+	// 	treeInstance.value.scrollTo({key: route.params.id})
+	// }
+
+	scrollTo = (node) => {
+		const target = document.querySelector(`[data-value="${node.data.id}"]`)
+		const parentDom = target.parentNode.parentNode;
+		parentDom.scrollTo({
+			top: target.offsetTop,
+			behavior: "smooth",
+		})
 	}
 
 	onMounted(async () => {
@@ -156,8 +174,12 @@
     :max-height="'calc(100vh - 57px)'"
     :height="'calc(100vh - 57px)'"
     :scroll="{
-      type: 'virtual'
+      rowHeight: 34,
+      bufferSize: 100,
+      threshold: 1,
+      type: 'virtual',
     }"
+    class="tree"
     @active="onActive"
   >
     <template #icon="{ node }">
@@ -192,5 +214,7 @@
 </template>
 
 <style scoped lang="less">
-
+	.tree {
+		min-width: 232px;
+	}
 </style>

@@ -1,5 +1,5 @@
 <script setup>
-	import { onMounted, ref, watch, computed } from "vue";
+	import { onMounted, ref, watch, computed, nextTick } from "vue";
 	import { extractVarFromJs, listToTDesignTree } from "@/util/util.js";
 	import { useContentStore, useSettingsStore } from "@/store/index.js";
 	import { useRoute, useRouter } from "vue-router";
@@ -20,6 +20,8 @@
 
 	let initiated = false;
 
+	const loading = ref(false);
+
 	const onActive = (value, {node, e, trigger}) => {
 		console.log("onActive",value, node.data, e, trigger);
 		checkAndSetContent(node)
@@ -27,7 +29,7 @@
 
 	const checkAndSetContent = (node) => {
 		if (node && node.data) {
-			console.log("node: ",node)
+			// console.log("node: ",node)
 			let contentPath, contentEnPath, type;
 			if (node.data.htmlPath) {
 				contentPath = node.data.htmlPath
@@ -82,11 +84,12 @@
 					const parents = treeInstance.value.getParents(route.params.id)
 					parents.forEach(item => {
 						if (!expanded.value.includes(item.data.id)) {
-							// await nextTick()
-							// await nextTick()
 							expanded.value.push(item.data.id);
 						}
 					})
+					await nextTick();
+					// treeInstance.value.scrollTo({key: route.params.id})
+					// console.log('scrolled');
 					checkAndSetContent(node)
 				}
 			}
@@ -107,7 +110,10 @@
 							// await nextTick()
 							expanded.value.push(item.data.id);
 						}
-					})
+					});
+					// await nextTick();
+					// treeInstance.value.scrollTo({key: id});
+					console.log('scrolled');
 					checkAndSetContent(node)
 				}
 			}
@@ -120,10 +126,12 @@
 	})
 
 	const loadData = async (url, varName) => {
+		loading.value = true;
 		const resp = await fetch(url)
 		if (resp.status === 200) {
 			let js = await resp.text();
 			data.value = listToTDesignTree(extractVarFromJs(js, varName));
+			loading.value = false;
 		}
 	}
 
@@ -144,6 +152,12 @@
     :activable="true"
     :keys="{ value: 'id' }"
     :expand-level="1"
+    :line="true"
+    :max-height="'calc(100vh - 57px)'"
+    :height="'calc(100vh - 57px)'"
+    :scroll="{
+      type: 'virtual'
+    }"
     @active="onActive"
   >
     <template #icon="{ node }">

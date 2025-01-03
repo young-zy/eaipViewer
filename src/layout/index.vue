@@ -127,7 +127,7 @@ const menuChanged = (e) => {
         <FileTree />
       </t-aside>
       <t-layout>
-        <t-content>
+        <t-content class="content">
           <MainFrame />
         </t-content>
         <t-footer>Copyright @ 2024-{{ new Date().getFullYear() }}. All Rights Reserved</t-footer>
@@ -144,8 +144,12 @@ const menuChanged = (e) => {
 	.aside {
 		display: flex;
 		height: calc(100vh - 57px);
-		max-width: 232px;
+		width: 232px;
 		overflow: auto;
+	}
+
+	.content {
+		max-width:  calc(100vw - 232px);
 	}
 
 	:deep(.t-menu__operations){

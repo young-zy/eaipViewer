@@ -1,18 +1,12 @@
 <script setup>
 	import { useContentStore, useSettingsStore } from "@/store/index.js";
-	import {watch, ref, nextTick,computed} from "vue"
+	import {watch, ref,computed,onMounted} from "vue"
 
-	import * as pdfjs from 'pdfjs-dist/build/pdf';
-	import {
-		PDFLinkService,
-		PDFFindController,
-		PDFScriptingManager,
-		PDFSinglePageViewer,
-		EventBus
-	} from "pdfjs-dist/web/pdf_viewer"
-	import "pdfjs-dist/web/pdf_viewer.css";
+	import VuePdfEmbed from 'vue-pdf-embed'
 
-	const pdfContainer = ref(null)
+	// optional styles
+	import 'vue-pdf-embed/dist/styles/annotationLayer.css'
+	import 'vue-pdf-embed/dist/styles/textLayer.css'
 
 	const contentStore = useContentStore()
 
@@ -20,40 +14,14 @@
 
 	const iframeDom = ref(null)
 
+	const pdfSource = ref(null)
+
 	watch(() => contentStore.currentFilePath, async (newValue) => {
 		console.log(newValue)
 		if (newValue) {
 			if (contentStore.currentType === 'pdf') {
-				await nextTick();
-				const container = pdfContainer.value;
-				const eventBus = new EventBus();
-				// (Optionally) enable hyperlinks within PDF files.
-				const pdfLinkService = new PDFLinkService({
-					eventBus,
-				});
-
-				// (Optionally) enable find controller.
-				const pdfFindController = new PDFFindController({
-					eventBus,
-					linkService: pdfLinkService,
-				});
-
-				// // (Optionally) enable scripting support.
-				// const pdfScriptingManager = new PDFScriptingManager({
-				// 	eventBus,
-				// 	sandboxBundleSrc: SANDBOX_BUNDLE_SRC,
-				// });
-
-				const pdfSinglePageViewer = new PDFSinglePageViewer({
-					container,
-					eventBus,
-					linkService: pdfLinkService,
-					findController: pdfFindController,
-					// scriptingManager: pdfScriptingManager,
-				});
-				pdfLinkService.setViewer(pdfSinglePageViewer);
-				// pdfScriptingManager.setViewer(pdfSinglePageViewer);
-				pdfLinkService.setDocument('https://eaip.young-zy.com/Data/' + newValue)
+				pdfSource.value = 'https://eaip.young-zy.com/Data/' + newValue
+				pdfLoading.value = true;
 			} else if (contentStore.currentType === 'html') {
 				iframeLoading.value = true;
 				iframeURL.value = 'https://eaip.young-zy.com/Data/' + newValue;
@@ -65,9 +33,16 @@
 
 	const iframeLoading = ref(false)
 
+	const pdfLoading = ref(false)
+
 	const iframeLoaded = (e) => {
 		console.log('iframeLoaded', e);
 		iframeLoading.value = false;
+	}
+
+	const pdfLoaded = (e) => {
+		console.log('pdfLoaded', e);
+		pdfLoading.value = false;
 	}
 
 	const loading = computed(() => {
@@ -78,10 +53,14 @@
 				return true;
 			}
 		} else if (contentStore.currentType ==='pdf') {
-			return false;
+			return pdfLoading.value;
 		} else {
-			return true;
+			return false;
 		}
+	})
+
+	onMounted(() => {
+		// TODO scroll
 	})
 
 </script>
@@ -98,13 +77,17 @@
     class="main-frame"
   >
     <div
-      v-if="contentStore.currentType === 'pdf'"
-      ref="pdfContainer"
+      v-show="contentStore.currentType === 'pdf'"
       class="pdf-container"
     >
-      <div />
+      <VuePdfEmbed
+        annotation-layer
+        text-layer
+        :source="pdfSource"
+        @loaded="pdfLoaded"
+      />
     </div>
-    <div v-else-if="contentStore.currentType === 'html'">
+    <div v-show="contentStore.currentType === 'html'">
       <iframe
         ref="iframeDom"
         class="iframe"
@@ -114,7 +97,7 @@
       />
     </div>
     <div
-      v-else
+      v-show="contentStore.currentType !== 'pdf' && contentStore.currentType !== 'html'"
       class="empty"
     >
       <span>
@@ -131,6 +114,10 @@
 	}
 	.main-frame {
 		height: calc(100vh - 132px);
+		max-height: calc(100vh - 132px);
+		overflow: auto;
+		padding-left: 32px;
+		padding-right: 32px;
 		.iframe {
 			height: calc(100vh - 132px);
 			width: 100%;
@@ -145,7 +132,7 @@
 			align-content: center;
 		}
 		.pdf-container {
-			position: absolute;
+			max-height: calc(100vh - 140px);
 		}
 	}
 </style>

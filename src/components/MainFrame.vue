@@ -20,11 +20,11 @@
 		console.log(newValue)
 		if (newValue) {
 			if (contentStore.currentType === 'pdf') {
-				pdfSource.value = 'https://eaip.young-zy.com/Data/' + newValue
+				pdfSource.value = import.meta.env.VITE_DATA_BASE_URL + newValue
 				pdfLoading.value = true;
 			} else if (contentStore.currentType === 'html') {
 				iframeLoading.value = true;
-				iframeURL.value = 'https://eaip.young-zy.com/Data/' + newValue;
+				iframeURL.value = import.meta.env.VITE_DATA_BASE_URL + newValue;
 			}
 		}
 	})

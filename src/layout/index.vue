@@ -5,6 +5,7 @@ import { useSettingsStore } from "@/store/index.js"
 import { computed } from "vue"
 import MainFrame from "@/components/MainFrame.vue";
 import { useRoute, useRouter } from "vue-router";
+import Aside from "@/components/Aside.vue";
 
 const settingsStore = useSettingsStore()
 
@@ -124,7 +125,7 @@ const menuChanged = (e) => {
         class="aside"
         style="border-top: 1px solid var(--component-border);"
       >
-        <FileTree />
+        <Aside />
       </t-aside>
       <t-layout>
         <t-content class="content">

@@ -54,81 +54,22 @@
 
 	const config = {
 		AMDT: {
-			url: 'https://eaip.young-zy.com/Data/JsonPath/AMDT.js',
+			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/AMDT.js',
 			varName: 'amdtTreeData'
 		},
 		GEN: {
-			url: 'https://eaip.young-zy.com/Data/JsonPath/GEN.js',
+			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/GEN.js',
 			varName: 'genTreeData'
 		},
 		ENR: {
-			url: 'https://eaip.young-zy.com/Data/JsonPath/ENR.js',
+			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/ENR.js',
 			varName: 'enrTreeData'
 		},
 		AD: {
-			url: 'https://eaip.young-zy.com/Data/JsonPath/AD.js',
+			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/AD.js',
 			varName: 'adTreeData'
 		},
 	}
-
-	watch(() => route.name, async (newVal, oldValue) => {
-		console.log(newVal, oldValue)
-		if (!initiated || newVal !== oldValue) {
-			console.log(newVal, oldValue)
-			initiated = true;
-			if (config[newVal]) {
-				await loadData(config[newVal].url,config[newVal].varName)
-				// check if id exists
-				if (route.params.id) {
-					const node = treeInstance.value.getItem(route.params.id)
-					const parents = treeInstance.value.getParents(route.params.id)
-					parents.forEach(item => {
-						if (!expanded.value.includes(item.data.id)) {
-							expanded.value.push(item.data.id);
-						}
-					})
-					await nextTick();
-					if (node) {
-						scrollTo(node)
-					}
-					// treeInstance.value.scrollTo({key: route.params.id})
-					// console.log('scrolled');
-					checkAndSetContent(node)
-				}
-			}
-		}
-	})
-
-	watch(
-			() => route.params.id,
-			async id => {
-				console.log("id", id)
-				if (id) {
-					activeId.value = [id.toString()]
-					const node = treeInstance.value.getItem(id)
-					const parents = treeInstance.value.getParents(id)
-					parents.forEach(item => {
-						if (!expanded.value.includes(item.data.id)) {
-							// await nextTick()
-							// await nextTick()
-							expanded.value.push(item.data.id);
-						}
-					});
-					await nextTick();
-					if (node) {
-						scrollTo(node)
-					}
-					console.log('scrolled');
-					checkAndSetContent(node)
-				}
-			}
-	)
-
-	watch(() => settingsStore.currentLanguage, (newVal, oldVal) => {
-		if (newVal !== oldVal) {
-			console.log("language", newVal, oldVal)
-		}
-	})
 
 	const loadData = async (url, varName) => {
 		loading.value = true;
@@ -140,18 +81,75 @@
 		}
 	}
 
-	// window.updateTree = () => {
-	// 	treeInstance.value.scrollTo({key: route.params.id})
-	// }
-
-	scrollTo = (node) => {
-		const target = document.querySelector(`[data-value="${node.data.id}"]`)
-		const parentDom = target.parentNode.parentNode;
-		parentDom.scrollTo({
-			top: target.offsetTop,
-			behavior: "smooth",
-		})
+	scrollTo = async  (node) => {
+		setTimeout(() => {
+			let target = document.querySelector(`[data-value="${node.data.id}"]`)
+			const parentDom = target?.parentNode?.parentNode;
+			parentDom?.scrollTo({
+				top: target.offsetTop,
+				behavior: "smooth",
+			})
+		}, 300)
 	}
+
+	watch([() => route.name, () => route.params.id], async (newVal, oldValue) => {
+		console.log(newVal, oldValue)
+		if (newVal[0] !== oldValue[0]) {
+			console.log(newVal, oldValue)
+			initiated = true;
+			if (config[newVal[0]]) {
+				await loadData(config[newVal[0]].url,config[newVal[0]].varName)
+				// check if id exists
+			}
+		}
+		if (newVal[1]) {
+			const node = treeInstance.value.getItem(newVal[1])
+			const parents = treeInstance.value.getParents(newVal[1])
+			parents.forEach(item => {
+				if (!expanded.value.includes(item.data.id)) {
+					expanded.value.push(item.data.id);
+				}
+			})
+			await nextTick();
+			if (node) {
+				scrollTo(node)
+			}
+			// treeInstance.value.scrollTo({key: route.params.id})
+			// console.log('scrolled');
+			checkAndSetContent(node)
+		}
+	}, {immediate: true})
+
+	// watch(
+	// 		() => route.params.id,
+	// 		async id => {
+	// 			console.log("id", id)
+	// 			if (id) {
+	// 				activeId.value = [id.toString()]
+	// 				const node = treeInstance.value.getItem(id)
+	// 				const parents = treeInstance.value.getParents(id)
+	// 				parents.forEach(item => {
+	// 					if (!expanded.value.includes(item.data.id)) {
+	// 						// await nextTick()
+	// 						// await nextTick()
+	// 						expanded.value.push(item.data.id);
+	// 					}
+	// 				});
+	// 				await nextTick();
+	// 				if (node) {
+	// 					scrollTo(node)
+	// 				}
+	// 				console.log('scrolled');
+	// 				checkAndSetContent(node)
+	// 			}
+	// 		}
+	// )
+
+	watch(() => settingsStore.currentLanguage, (newVal, oldVal) => {
+		if (newVal !== oldVal) {
+			console.log("language", newVal, oldVal)
+		}
+	})
 
 	onMounted(async () => {
 		// TODO get route
@@ -161,7 +159,12 @@
 </script>
 
 <template>
+  <t-loading
+    v-if="loading"
+    class="loading"
+  />
   <t-tree
+    v-else
     ref="treeInstance"
     v-model:expanded="expanded"
     :expand-parent="true"
@@ -215,6 +218,9 @@
 
 <style scoped lang="less">
 	.tree {
+		min-width: 232px;
+	}
+	.loading {
 		min-width: 232px;
 	}
 </style>

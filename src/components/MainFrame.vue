@@ -131,20 +131,18 @@
 			return (currentScale.value * 100).toFixed(2);
 		},
 		set: (newScale) => {
-			debounce(() => {
-				if (newScale < 0.01) {
-					newScale = 0.01;
-				}
-				let newWidth = width.value / currentScale.value * newScale / 100;
-				if (newWidth > 7000) {
-					newWidth = 7000
-					newScale = newWidth * 100 / width.value * currentScale.value;
-				}
-				console.log('new width', newWidth);
-				console.log('new scale', newScale);
-				currentScale.value = newScale / 100;
-				width.value = newWidth;
-			}, 1000)
+			if (newScale < 0.01) {
+				newScale = 0.01;
+			}
+			let newWidth = width.value / currentScale.value * newScale / 100;
+			if (newWidth > 7000) {
+				newWidth = 7000
+				newScale = newWidth * 100 / width.value * currentScale.value;
+			}
+			console.log('new width', newWidth);
+			console.log('new scale', newScale);
+			currentScale.value = newScale / 100;
+			width.value = newWidth;
 		}
 	})
 

@@ -31,6 +31,10 @@ const menuChanged = (e) => {
 	router.push({name:e, params: {  } })
 }
 
+const jumpToGithub = () => {
+	window.open('https://github.com/young-zy/eaipViewer');
+}
+
 </script>
 
 <template>
@@ -131,7 +135,22 @@ const menuChanged = (e) => {
         <t-content class="content">
           <MainFrame />
         </t-content>
-        <t-footer>Copyright @ 2024-{{ new Date().getFullYear() }}. All Rights Reserved</t-footer>
+        <t-footer class="footer">
+          <div>
+            Copyright @ 2024-{{ new Date().getFullYear() }}. All Rights Reserved
+          </div>
+          <div style="display: flex;">
+            <p>
+              Source:
+            </p>
+            <Icon
+              size="16px"
+              class="github-icon"
+              name="logo-github-filled"
+              @click="jumpToGithub"
+            />
+          </div>
+        </t-footer>
       </t-layout>
     </t-layout>
   </t-layout>
@@ -155,5 +174,16 @@ const menuChanged = (e) => {
 
 	:deep(.t-menu__operations){
 		min-width: 260px;
+	}
+	.footer {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		max-height: 70px;
+		padding: 8px;
+		.github-icon {
+			cursor: pointer;
+			align-self: center;
+		}
 	}
 </style>

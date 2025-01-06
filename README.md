@@ -32,5 +32,6 @@ npm run build
 
 Step1: Download latest EAIP full package from [https://www.eaipchina.cn/home/Version/ < latest version number > /Master](https://www.eaipchina.cn/home/Default).   
 Step2: unzip and deploy full package to expected server.   
-Step3: vite build this project.    
-Step4: copy files in build dist into the full package path and override content.    
+Step3: edit `VITE_DATA_BASE_URL` in `.env.production` file
+Step4: vite build this project.    
+Step5: copy files in build dist into the full package path and override content.    

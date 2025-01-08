@@ -18,8 +18,6 @@
 
 	const treeInstance = ref(null);
 
-	let initiated = false;
-
 	const loading = ref(false);
 
 	const onActive = (value, {node, e, trigger}) => {
@@ -96,7 +94,6 @@
 		console.log(newVal, oldValue)
 		if (newVal[0] !== oldValue[0]) {
 			console.log(newVal, oldValue)
-			initiated = true;
 			if (config[newVal[0]]) {
 				await loadData(config[newVal[0]].url,config[newVal[0]].varName)
 				// check if id exists
@@ -119,43 +116,6 @@
 			checkAndSetContent(node)
 		}
 	}, {immediate: true})
-
-	// watch(
-	// 		() => route.params.id,
-	// 		async id => {
-	// 			console.log("id", id)
-	// 			if (id) {
-	// 				activeId.value = [id.toString()]
-	// 				const node = treeInstance.value.getItem(id)
-	// 				const parents = treeInstance.value.getParents(id)
-	// 				parents.forEach(item => {
-	// 					if (!expanded.value.includes(item.data.id)) {
-	// 						// await nextTick()
-	// 						// await nextTick()
-	// 						expanded.value.push(item.data.id);
-	// 					}
-	// 				});
-	// 				await nextTick();
-	// 				if (node) {
-	// 					scrollTo(node)
-	// 				}
-	// 				console.log('scrolled');
-	// 				checkAndSetContent(node)
-	// 			}
-	// 		}
-	// )
-
-	watch(() => settingsStore.currentLanguage, (newVal, oldVal) => {
-		if (newVal !== oldVal) {
-			console.log("language", newVal, oldVal)
-		}
-	})
-
-	onMounted(async () => {
-		// TODO get route
-		// TODO load data js
-		// TODO set data
-	})
 </script>
 
 <template>
@@ -178,7 +138,7 @@
     :height="'calc(100vh - 57px)'"
     :scroll="{
       rowHeight: 34,
-      bufferSize: 100,
+      bufferSize: 30,
       threshold: 1,
       type: 'virtual',
     }"

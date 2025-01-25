@@ -106,7 +106,7 @@
 
 	const pdfStyle = computed(() => {
 		return {
-			filter: settingsStore.currentTheme === 'dark' ? 'invert(0.8) contrast(1)':'',
+			filter: settingsStore.currentTheme === 'dark' ? 'invert(0.8) hue-rotate(180deg) contrast(1)':'',
 			overflow: 'auto',
 		}
 	})

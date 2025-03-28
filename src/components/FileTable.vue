@@ -1,5 +1,4 @@
 <script setup>
-	import { extractVarFromJs, listToTDesignTree } from "@/util/util.js";
 	import {ref, watch} from "vue"
 	import { useRoute, useRouter } from "vue-router";
 	import { useContentStore } from "@/store/index.js";
@@ -39,7 +38,7 @@
 
 	const config = {
 		NOTAM: {
-			url: import.meta.env.VITE_DATA_BASE_URL + 'JsonPath/NOTAM.js',
+			url: import.meta.env.VITE_DATA_BASE_URL + '/Data/JsonPath/NOTAM.JSON',
 			varName: 'notamTreeData',
 			rowKey: 'SeriesName',
 			columns: [
@@ -54,9 +53,9 @@
 			]
 		},
 		AICs: {
-			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/AIC.js',
+			url: import.meta.env.VITE_DATA_BASE_URL+'/Data/JsonPath/AIC.JSON',
 			varName: 'aicTreeData',
-			rowKey: 'SeriesName',
+			rowKey: 'Id',
 			columns: [
 				{
 					colKey: 'Serial',
@@ -74,7 +73,7 @@
 			]
 		},
 		SUPs: {
-			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/SUP.js',
+			url: import.meta.env.VITE_DATA_BASE_URL+'/Data/JsonPath/SUP.JSON',
 			varName: 'supTreeData',
 			rowKey: 'Id',
 			columns: [
@@ -99,8 +98,7 @@
 		loading.value = true;
 		const resp = await fetch(url)
 		if (resp.status === 200) {
-			let js = await resp.text();
-			data.value = extractVarFromJs(js, varName);
+			data.value = await resp.json();
 			loading.value = false;
 		}
 	}
@@ -115,7 +113,7 @@
 			}
 		}
 		if (newVal[1]) {
-			active.value = newVal[1];
+			active.value = [newVal[1]];
 			// get active node from data
 			let node;
 			data.value.forEach((item) => {

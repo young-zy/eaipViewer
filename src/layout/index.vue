@@ -54,20 +54,9 @@ const jumpToGithub = () => {
             alt="logo"
           >
         </template>
-        <t-submenu value="AIP">
-          <template #title>
-            <span>AIP</span>
-          </template>
-          <t-menu-item value="GEN">
-            GEN
-          </t-menu-item>
-          <t-menu-item value="ENR">
-            ENR
-          </t-menu-item>
-          <t-menu-item value="AD">
-            AD
-          </t-menu-item>
-        </t-submenu>
+        <t-menu-item value="AIP">
+          AIP
+        </t-menu-item>
         <t-menu-item value="AMDT">
           AMDT
         </t-menu-item>

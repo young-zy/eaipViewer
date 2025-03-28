@@ -152,9 +152,8 @@
         :content="settingsStore.currentLanguage === 'cn' ? node.data.name_cn : node.data.name"
         placement="bottom"
         trigger="hover"
-        :show-arrow="true"
       >
-        <span> {{ settingsStore.currentLanguage === 'cn' ? node.data.name_cn : node.data.name }} </span>
+        <span style="width: 100%"> {{ settingsStore.currentLanguage === 'cn' ? node.data.name_cn : node.data.name }} </span>
       </t-popup>
     </template>
   </t-tree>
@@ -167,4 +166,8 @@
 	.loading {
 		min-width: 232px;
 	}
+
+  :deep(.t-tree__label) {
+    overflow: unset !important;
+  }
 </style>

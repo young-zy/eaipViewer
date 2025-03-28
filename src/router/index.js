@@ -13,27 +13,10 @@ const routes = [
 		},
 		children: [
 			{
-				path: 'AIP/',
-				children: [
-					{
-						name: 'GEN',
-						path: 'GEN/:id?',
-						component: MainFrame,
-						type: 'tree',
-					},
-					{
-						name: 'ENR',
-						path: 'ENR/:id?',
-						component: MainFrame,
-						type: 'tree'
-					},
-					{
-						name: 'AD',
-						path: 'AD/:id?',
-						component: MainFrame,
-						type: 'tree'
-					},
-				]
+				name: 'AIP',
+				path: 'AIP/:id?',
+				component: MainFrame,
+				type: 'tree'
 			},
 			{
 				name: 'AMDT',

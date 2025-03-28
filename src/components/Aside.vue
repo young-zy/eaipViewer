@@ -11,7 +11,7 @@
     class="transition"
     mode="out-in"
   >
-    <FileTree v-if="['AMDT', 'AD', 'GEN','ENR'].includes(route.name)" />
+    <FileTree v-if="['AMDT', 'AIP'].includes(route.name)" />
     <FileTable v-else-if="['SUPs', 'AICs', 'NOTAM'].includes(route.name)" />
   </Transition>
 </template>

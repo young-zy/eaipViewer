@@ -52,29 +52,19 @@
 
 	const config = {
 		AMDT: {
-			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/AMDT.js',
-			varName: 'amdtTreeData'
+			url: import.meta.env.VITE_DATA_BASE_URL+'/Data/JsonPath/AMDT.JSON',
 		},
-		GEN: {
-			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/GEN.js',
-			varName: 'genTreeData'
-		},
-		ENR: {
-			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/ENR.js',
-			varName: 'enrTreeData'
-		},
-		AD: {
-			url: import.meta.env.VITE_DATA_BASE_URL+'JsonPath/AD.js',
-			varName: 'adTreeData'
-		},
+    AIP: {
+      url: import.meta.env.VITE_DATA_BASE_URL+'/Data/JsonPath/AIP.JSON',
+    },
 	}
 
 	const loadData = async (url, varName) => {
 		loading.value = true;
 		const resp = await fetch(url)
 		if (resp.status === 200) {
-			let js = await resp.text();
-			data.value = listToTDesignTree(extractVarFromJs(js, varName));
+			let json = await resp.json();
+			data.value = listToTDesignTree(json);
 			loading.value = false;
 		}
 	}
@@ -95,7 +85,7 @@
 		if (newVal[0] !== oldValue[0]) {
 			console.log(newVal, oldValue)
 			if (config[newVal[0]]) {
-				await loadData(config[newVal[0]].url,config[newVal[0]].varName)
+				await loadData(config[newVal[0]].url)
 				// check if id exists
 			}
 		}
@@ -134,14 +124,8 @@
     :keys="{ value: 'id' }"
     :expand-level="1"
     :line="true"
-    :max-height="'calc(100vh - 57px)'"
-    :height="'calc(100vh - 57px)'"
-    :scroll="{
-      rowHeight: 34,
-      bufferSize: 30,
-      threshold: 1,
-      type: 'virtual',
-    }"
+    :max-height="'calc(100vh - 58px)'"
+    :height="'calc(100vh - 58px)'"
     class="tree"
     @active="onActive"
   >

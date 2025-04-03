@@ -1,8 +1,12 @@
 <script setup>
-	import { onMounted, ref, watch, computed, nextTick } from "vue";
-	import { extractVarFromJs, listToTDesignTree } from "@/util/util.js";
+	import { ref, watch, computed, nextTick } from "vue";
+	import { listToTDesignTree } from "@/util/util.js";
 	import { useContentStore, useSettingsStore } from "@/store/index.js";
 	import { useRoute, useRouter } from "vue-router";
+	import { CaretDownSmallIcon, CaretRightSmallIcon, FilePdfIcon, Html5Icon } from "tdesign-icons-vue-next";
+	import { SearchIcon } from 'tdesign-icons-vue-next';
+
+	const filterStr = ref("");
 
 	const data = ref(null)
 
@@ -106,6 +110,26 @@
 			checkAndSetContent(node)
 		}
 	}, {immediate: true})
+
+	let filter = ref(null)
+
+	const filterChange = () => {
+		if (filterStr.value) {
+			filter.value = (node) => {
+				return node.data.name_cn.toUpperCase().includes(filterStr.value.toUpperCase()) ||
+						node.data.name.toUpperCase().includes(filterStr.value.toUpperCase())
+			}
+		} else {
+			filter.value = null;
+		}
+	}
+
+	const inputKeyPress = (value, ctx) => {
+		if (ctx.e.keyCode === 13) {
+			filterChange()
+		}
+	}
+
 </script>
 
 <template>
@@ -113,50 +137,67 @@
     v-if="loading"
     class="loading"
   />
-  <t-tree
-    v-else
-    ref="treeInstance"
-    v-model:expanded="expanded"
-    :expand-parent="true"
-    :actived="activeId"
-    :data="data"
-    :activable="true"
-    :keys="{ value: 'id' }"
-    :expand-level="1"
-    :line="true"
-    :max-height="'calc(100vh - 58px)'"
-    :height="'calc(100vh - 58px)'"
-    class="tree"
-    @active="onActive"
-  >
-    <template #icon="{ node }">
-      <t-icon
-        v-if="node.getChildren() && !node.expanded"
-        name="caret-right-small"
-      />
-      <t-icon
-        v-else-if="node.getChildren() && node.expanded"
-        name="caret-down-small"
-      />
-      <t-icon
-        v-if="node.data.htmlPath"
-        name="html5"
-      />
-      <t-icon
-        v-else-if="node.data.pdfPath"
-        name="file-pdf"
-      />
-    </template>
-    <template #label="{ node }">
-      <t-popup
-        :content="settingsStore.currentLanguage === 'cn' ? node.data.name_cn : node.data.name"
-        placement="bottom"
-        trigger="hover"
+  <div v-else>
+    <t-input-adornment :prepend="settingsStore.currentLanguage === 'cn' ? '过滤：' :'filter:'">
+      <t-input
+        v-model="filterStr"
+        placeholder=""
+        style="max-width: 172px;"
+        :clearable="true"
+        @blur="filterChange"
+        @clear="filterChange"
+        @keypress="inputKeyPress"
       >
-        <span style="width: 100%"> {{ settingsStore.currentLanguage === 'cn' ? node.data.name_cn : node.data.name }} </span>
-      </t-popup>
-    </template>
-  </t-tree>
+        <template #suffixIcon>
+          <search-icon :style="{ cursor: 'pointer' }" />
+        </template>
+      </t-input>
+    </t-input-adornment>
+    <t-tree
+      ref="treeInstance"
+      v-model:expanded="expanded"
+      :expand-parent="true"
+      :actived="activeId"
+      :data="data"
+      :activable="true"
+      :keys="{ value: 'id' }"
+      :expand-level="1"
+      :line="true"
+      :max-height="'calc(calc(100vh - 58px) - 32px)'"
+      :height="'calc(100vh - 58px)'"
+      :filter="filter"
+      :allow-fold-node-on-filter="true"
+      class="tree"
+      @active="onActive"
+    >
+      <template #icon="{ node }">
+        <CaretRightSmallIcon
+          v-if="node.getChildren() && !node.expanded"
+        />
+        <CaretDownSmallIcon
+          v-else-if="node.getChildren() && node.expanded"
+        />
+        <Html5Icon
+          v-if="node.data.htmlPath"
+        />
+        <FilePdfIcon
+          v-else-if="node.data.pdfPath"
+        />
+      </template>
+      <template #label="{ node }">
+        <t-popup
+          :content="settingsStore.currentLanguage === 'cn' ? node.data.name_cn : node.data.name"
+          placement="bottom"
+          trigger="hover"
+        >
+          <span
+            :class="{modified: node.data.Is_Modified === 'Y'}"
+            style="width: 100%"
+          > {{ settingsStore.currentLanguage === 'cn' ? node.data.name_cn : node.data.name }} </span>
+        </t-popup>
+      </template>
+    </t-tree>
+  </div>
 </template>
 
 <style scoped lang="less">
@@ -170,4 +211,12 @@
   :deep(.t-tree__label) {
     overflow: unset !important;
   }
+
+	.modified {
+		color: #ff2a2a;
+		[theme-mode=dark] &{
+			color: #ff6060;
+		}
+	}
+
 </style>

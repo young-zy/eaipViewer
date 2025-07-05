@@ -1,6 +1,6 @@
 <script setup>
-	import { useContentStore, useSettingsStore } from "@/store/index.js";
-	import {watch, ref,computed,onMounted,onBeforeUnmount} from "vue"
+	import { useContentStore, useLayoutStore, useSettingsStore } from "@/store/index.js";
+	import {watch, ref,computed} from "vue"
 
 	import VuePdfEmbed from 'vue-pdf-embed'
 
@@ -9,6 +9,8 @@
 	import 'vue-pdf-embed/dist/styles/textLayer.css'
 
 	const contentStore = useContentStore()
+
+	const layoutStore = useLayoutStore()
 
 	const iframeURL = ref('')
 
@@ -190,7 +192,10 @@
         ref="iframeDom"
         class="iframe"
         :src="iframeURL"
-        :style="{filter: settingsStore.currentTheme === 'dark' ? 'invert(0.8) contrast(0.8)':''}"
+        :style="{
+          filter: settingsStore.currentTheme === 'dark' ? 'invert(0.8) contrast(0.8)':'',
+          pointerEvents: layoutStore.resizing ? 'none': 'auto', // prevent iframe event on resizing
+        }"
         @load="iframeLoaded"
       />
     </div>

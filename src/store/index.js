@@ -84,3 +84,21 @@ export const useContentStore = defineStore('contentStore', () => {
 
 	return {isEmpty, currentFilePath, currentType, setContent};
 })
+
+
+export const useLayoutStore = defineStore('layout', () => {
+	const sidebarWidth = ref(223);
+
+	const setSidebarWidth = (newWidth) => {
+		sidebarWidth.value = newWidth;
+	}
+
+	const resizing =  ref(false);
+
+	const setResizing = (newResizing) => {
+		resizing.value = newResizing;
+	}
+
+
+	return {sidebarWidth, setSidebarWidth, resizing, setResizing};
+})

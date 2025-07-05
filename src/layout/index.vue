@@ -1,13 +1,15 @@
 <script setup>
-import FileTree from "@/components/FileTree.vue";
 import { Icon } from "tdesign-icons-vue-next";
-import { useSettingsStore } from "@/store/index.js"
+import { useLayoutStore, useSettingsStore } from "@/store/index.js"
 import { computed } from "vue"
 import MainFrame from "@/components/MainFrame.vue";
 import { useRoute, useRouter } from "vue-router";
 import Aside from "@/components/Aside.vue";
 
+const resizeHandleWidth = 16;
+
 const settingsStore = useSettingsStore()
+const layoutStore = useLayoutStore()
 
 const router = useRouter();
 const route = useRoute();
@@ -34,6 +36,33 @@ const menuChanged = (e) => {
 const jumpToGithub = () => {
 	window.open('https://github.com/young-zy/eaipViewer');
 }
+
+const handleMouseDown = (e) => {
+	if (e.target.id !== "resizer") {
+		return;
+	}
+	console.log("resize start", e);
+	layoutStore.setResizing(true)
+}
+
+const handleMouseMove = (e) => {
+	if (!layoutStore.resizing) {
+		return
+	}
+	console.log(e)
+	layoutStore.setSidebarWidth(e.clientX)
+}
+
+const handleMouseUp = (e) => {
+	console.log("mouse up")
+	if (!layoutStore.resizing) {
+		return
+	}
+	console.log("resize stop", e);
+	layoutStore.setResizing(false)
+}
+
+
 
 </script>
 
@@ -113,13 +142,23 @@ const jumpToGithub = () => {
         </template>
       </t-head-menu>
     </t-header>
-    <t-layout>
+    <t-layout
+      @mousemove="handleMouseMove"
+      @mouseup="handleMouseUp"
+      @mousedown="handleMouseDown"
+    >
       <t-aside
         class="aside"
         style="border-top: 1px solid var(--component-border);"
+        :style="{width: layoutStore.sidebarWidth + 'px'}"
       >
         <Aside />
       </t-aside>
+      <div
+        id="resizer"
+        style="cursor: col-resize;"
+        :style="{width: resizeHandleWidth + 'px'}"
+      />
       <t-layout>
         <t-content class="content">
           <MainFrame />

@@ -2,6 +2,7 @@
 	import { ref, watch, computed, nextTick } from "vue";
 	import { listToTDesignTree } from "@/util/util.js";
 	import { useContentStore, useSettingsStore } from "@/store/index.js";
+	import { uiText } from '@/util/uiText.js'
 	import { useRoute, useRouter } from "vue-router";
 	import { CaretDownSmallIcon, CaretRightSmallIcon, FilePdfIcon, Html5Icon } from "tdesign-icons-vue-next";
 	import { SearchIcon } from 'tdesign-icons-vue-next';
@@ -11,6 +12,7 @@
 	const data = ref(null)
 
 	const settingsStore = useSettingsStore()
+	const text = computed(() => uiText[settingsStore.currentLanguage])
 
 	const contentStore = useContentStore()
 
@@ -133,7 +135,7 @@
     class="loading"
   />
   <div v-else>
-    <t-input-adornment :prepend="settingsStore.currentLanguage === 'cn' ? '过滤：' :'filter:'">
+    <t-input-adornment :prepend="text.filter">
       <t-input
         v-model="filterStr"
         placeholder=""

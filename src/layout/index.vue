@@ -1,12 +1,14 @@
 <script setup>
 import { Icon } from "tdesign-icons-vue-next";
 import { useLayoutStore, useSettingsStore } from "@/store/index.js"
+import { uiText } from '@/util/uiText.js'
 import { computed, ref, onMounted, onBeforeUnmount } from "vue"
 import MainFrame from "@/components/MainFrame.vue";
 import { useRoute, useRouter } from "vue-router";
 import Aside from "@/components/Aside.vue";
 
 const settingsStore = useSettingsStore()
+const text = computed(() => uiText[settingsStore.currentLanguage])
 const layoutStore = useLayoutStore()
 const customerInfo = ref(null)
 
@@ -168,13 +170,13 @@ onBeforeUnmount(stopResizing)
         </t-content>
         <t-footer class="footer">
           <div v-if="customerInfo" class="data-info">
-            {{ customerInfo.DataName }} · {{ customerInfo.DataVersion }} · 发布：{{ customerInfo.PublishDate }} · 生效：{{ customerInfo.EffectiveShow }}
+            {{ customerInfo.DataName }} · {{ customerInfo.DataVersion }} · {{ text.published }}: {{ customerInfo.PublishDate }} · {{ text.effective }}: {{ customerInfo.EffectiveShow }}
           </div>
           <div>
-            Copyright @ 2024-{{ new Date().getFullYear() }}. All Rights Reserved
+            Copyright © 2024-{{ new Date().getFullYear() }}. {{ text.copyright }}
           </div>
           <div class="source-link">
-            Source:
+            {{ text.source }}
             <Icon
               size="16px"
               class="github-icon"

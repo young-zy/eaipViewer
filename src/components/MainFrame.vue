@@ -1,5 +1,6 @@
 <script setup>
 	import { useContentStore, useLayoutStore, useSettingsStore } from "@/store/index.js";
+	import { uiText } from '@/util/uiText.js'
 	import {watch, ref,computed, onMounted, onBeforeUnmount} from "vue"
 
 	import VuePdfEmbed from 'vue-pdf-embed'
@@ -54,7 +55,7 @@
 			setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
 		} catch (error) {
 			console.error(error)
-			window.alert('PDF 下载失败，请稍后重试')
+			window.alert(text.value.downloadFailed)
 		}
 	}
 	onMounted(() => {
@@ -83,6 +84,7 @@
 	})
 
 	const settingsStore = useSettingsStore()
+	const text = computed(() => uiText[settingsStore.currentLanguage])
 
 	const iframeLoading = ref(false)
 
@@ -177,7 +179,7 @@
   <t-loading
     v-show="loading"
     class="loading"
-    text="加载中..."
+    :text="text.loading"
     size="medium"
   />
   <div
@@ -197,7 +199,7 @@
         class="pdf-tool-bar"
       >
         <div class="pdf-zoom-left">
-          <t-button variant="outline" @click="autoScale">自动缩放</t-button>
+          <t-button variant="outline" @click="autoScale">{{ text.autoScale }}</t-button>
           <t-button variant="outline" @click="changeScale(-1)">−</t-button>
         </div>
         <t-input-number
@@ -209,7 +211,7 @@
           suffix="%"
         />
         <t-button class="pdf-zoom-in" variant="outline" @click="changeScale(1)">+</t-button>
-        <t-button class="pdf-download" variant="outline" @click="downloadPdf">下载 PDF</t-button>
+        <t-button class="pdf-download" variant="outline" @click="downloadPdf">{{ text.downloadPdf }}</t-button>
       </div>
       <div ref="pdfScrollArea" class="pdf-scroll-area">
         <div class="pdf-pages">
@@ -242,7 +244,7 @@
       class="empty"
     >
       <span>
-        请在左侧选择文件
+        {{ text.selectFile }}
       </span>
     </div>
   </div>

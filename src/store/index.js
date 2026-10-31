@@ -48,6 +48,8 @@ export const useContentStore = defineStore('contentStore', () => {
 	const filePath = ref('');
 
 	const fileEnPath = ref('');
+	const fileName = ref('');
+	const fileEnName = ref('');
 
 	const isEmpty = computed(() => {
 		return !filePath.value;
@@ -57,9 +59,11 @@ export const useContentStore = defineStore('contentStore', () => {
 
 	const contentType = ref('')
 
-	function setContent(newPath, newEnPath, newType) {
+	function setContent(newPath, newEnPath, newType, newName = '', newEnName = newName) {
 		if (newPath === '') {
 			filePath.value = newPath;
+			fileName.value = '';
+			fileEnName.value = '';
 			contentType.value = '';
 			return
 		}
@@ -68,6 +72,8 @@ export const useContentStore = defineStore('contentStore', () => {
 		}
 		filePath.value = newPath;
 		fileEnPath.value = newEnPath;
+		fileName.value = newName;
+		fileEnName.value = newEnName;
 		contentType.value = newType;
 	}
 
@@ -81,6 +87,25 @@ export const useContentStore = defineStore('contentStore', () => {
 		}
 		return filePath.value;
 	})
+	const currentFileName = computed(() => settingsStore.currentLanguage === 'en' ? fileEnName.value : fileName.value)
 
-	return {isEmpty, currentFilePath, currentType, setContent};
+	return {isEmpty, currentFilePath, currentFileName, currentType, setContent};
+})
+
+
+export const useLayoutStore = defineStore('layout', () => {
+	const sidebarWidth = ref(223);
+
+	const setSidebarWidth = (newWidth) => {
+		sidebarWidth.value = newWidth;
+	}
+
+	const resizing =  ref(false);
+
+	const setResizing = (newResizing) => {
+		resizing.value = newResizing;
+	}
+
+
+	return {sidebarWidth, setSidebarWidth, resizing, setResizing};
 })

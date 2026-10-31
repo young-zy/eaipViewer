@@ -20,18 +20,16 @@
 	const active = ref(null)
 
 	const selectChange = (key, opts) => {
-		console.log('selectChange', key ,opts)
 		checkAndSetContent(opts.currentRowData, opts.currentRowKey)
 	}
 
 	const checkAndSetContent = (node, key) => {
 		if (node) {
-			// console.log("node: ",node)
 			let contentPath, contentEnPath, type;
 			contentPath = node.Document
 			contentEnPath = node.Document
 			type = 'pdf'
-			contentStore.setContent(contentPath, contentEnPath, type)
+			contentStore.setContent(contentPath, contentEnPath, type, node.SeriesName || node.Serial || node.Subject || '')
 			router.push({ name: route.name, params: {id: key} })
 		}
 	}
@@ -153,6 +151,7 @@
 <style scoped>
 	.table {
 		min-height: calc(100vh - 132px);
+		width: 100%;
 	}
 
 	:deep(.t-table-demo__select-without-handler) {

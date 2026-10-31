@@ -1,27 +1,78 @@
 <script setup>
-	import { useContentStore, useSettingsStore } from "@/store/index.js";
-	import {watch, ref,computed,onMounted,onBeforeUnmount} from "vue"
+	import { useContentStore, useLayoutStore, useSettingsStore } from "@/store/index.js";
+	import {watch, ref,computed, onMounted, onBeforeUnmount} from "vue"
 
 	import VuePdfEmbed from 'vue-pdf-embed'
 
-	// optional styles
 	import 'vue-pdf-embed/dist/styles/annotationLayer.css'
 	import 'vue-pdf-embed/dist/styles/textLayer.css'
 
 	const contentStore = useContentStore()
+
+	const layoutStore = useLayoutStore()
 
 	const iframeURL = ref('')
 
 	const iframeDom = ref(null)
 
 	const pdfEmbed = ref(null)
+	const mainFrame = ref(null)
+	const pdfScrollArea = ref(null)
+	let resizeObserver
+	const availableWidth = ref(0)
+	const pageWidth = ref(0)
+	const currentScale = ref(0)
+	let fitNewDocument = false
+	const width = computed(() => pageWidth.value * currentScale.value)
+	const fitPage = () => {
+		if (fitNewDocument && pageWidth.value && availableWidth.value) {
+			currentScale.value = availableWidth.value / pageWidth.value
+			fitNewDocument = false
+		}
+	}
+	const autoScale = () => {
+		if (pageWidth.value && pdfScrollArea.value?.clientWidth) {
+			currentScale.value = pdfScrollArea.value.clientWidth / pageWidth.value
+		}
+	}
+	const downloadPdf = async () => {
+		if (!pdfSource.value) return
+		const originalName = decodeURIComponent(new URL(pdfSource.value, location.href).pathname.split('/').pop()) || 'document.pdf'
+		const fileName = (contentStore.currentFileName || originalName).trim().replace(/[\\/:*?"<>|]/g, '_') || originalName
+		const dataVersion = window.Customers?.[0]?.DataVersion?.trim().replace(/[\\/:*?"<>|]/g, '_')
+		const downloadName = dataVersion ? `${dataVersion}_${fileName}` : fileName
+		try {
+			const response = await fetch(pdfSource.value)
+			if (!response.ok) throw new Error(`PDF download failed: ${response.status}`)
+			const blobUrl = URL.createObjectURL(await response.blob())
+			const link = document.createElement('a')
+			link.href = blobUrl
+			link.download = /\.pdf$/i.test(downloadName) ? downloadName : `${downloadName}.pdf`
+			document.body.appendChild(link)
+			link.click()
+			link.remove()
+			setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+		} catch (error) {
+			console.error(error)
+			window.alert('PDF 下载失败，请稍后重试')
+		}
+	}
+	onMounted(() => {
+		resizeObserver = new ResizeObserver(([entry]) => {
+			availableWidth.value = Math.max(0, entry.contentRect.width - 10)
+			fitPage()
+		})
+		if (mainFrame.value) resizeObserver.observe(mainFrame.value)
+	})
+	onBeforeUnmount(() => resizeObserver?.disconnect())
 
 	const pdfSource = ref(null)
 
-	watch(() => contentStore.currentFilePath, async (newValue) => {
-		console.log(newValue)
+	watch(() => contentStore.currentFilePath, (newValue) => {
 		if (newValue) {
 			if (contentStore.currentType === 'pdf') {
+				fitNewDocument = true
+				pageWidth.value = 0
 				pdfSource.value = import.meta.env.VITE_DATA_BASE_URL + newValue
 				pdfLoading.value = true;
 			} else if (contentStore.currentType === 'html') {
@@ -37,21 +88,37 @@
 
 	const pdfLoading = ref(false)
 
-	const currentScale = ref(0)
 
-	const iframeLoaded = (e) => {
-		console.log('iframeLoaded', e);
+	const styleIframeScrollbar = () => {
+		try {
+			const doc = iframeDom.value?.contentDocument
+			if (!doc?.head) return
+			const style = doc.createElement('style')
+			style.textContent = `
+				:root { color-scheme: light; --scrollbar-thumb: #b8c1cc; --scrollbar-track: #f3f5f7; }
+				* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+				*::-webkit-scrollbar { width: 10px; height: 10px; }
+				*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+				*::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border: 2px solid var(--scrollbar-track); border-radius: 8px; }
+				*::-webkit-scrollbar-thumb:hover { background: #929eac; }
+				*::-webkit-scrollbar-corner { background: var(--scrollbar-track); }
+			`
+			doc.getElementById('viewer-scrollbar-style')?.remove()
+			style.id = 'viewer-scrollbar-style'
+			doc.head.appendChild(style)
+		} catch {
+			// Cross-origin iframe documents cannot be styled from the parent page.
+		}
+	}
+	const iframeLoaded = () => {
+		styleIframeScrollbar()
 		iframeLoading.value = false;
 	}
 
-	const pdfLoaded = async (e) => {
-		console.log('pdfLoaded', e);
-		console.log('doc data',await pdfEmbed.value.doc.getViewerPreferences());
+	const pdfLoaded = async () => {
 		const page = await pdfEmbed.value.doc.getPage(1)
-		const pageWidth = page.getViewport({scale: 1}).width;
-
-		currentScale.value = width.value / pageWidth;
-		console.log('current scale',currentScale.value);
+		pageWidth.value = page.getViewport({scale: 1}).width;
+		fitPage()
 		pdfLoading.value = false;
 	}
 
@@ -69,62 +136,23 @@
 		}
 	})
 
-	// onMounted(() => {
-	// 	window.addEventListener('resize', onResize);
-	// })
-	//
-	// onBeforeUnmount(() => {
-	// 	window.removeEventListener('resize', onResize);
-	// })
-
-	// const vw = ref(window.innerWidth);
-	// const vh = ref(window.innerHeight);
-	const width = ref(window.innerWidth - 232 - 64);
-
-	// const onResize = () => {
-	// 	vw.value = window.innerWidth;
-	// 	vh.value = window.innerHeight;
-	// }
-
-	const increaseScale = () => {
-		const newScale = parseFloat((currentScale.value + 0.01).toFixed(2));
-		const newWidth = width.value / currentScale.value * newScale;
-		console.log('new width', newWidth);
-		console.log('new scale', newScale);
-		currentScale.value = newScale;
-		width.value = newWidth;
-	}
-
-	const decreaseScale = () => {
-		const newScale = parseFloat((currentScale.value - 0.01).toFixed(2));
-		const newWidth = width.value / currentScale.value * newScale;
-		console.log('new width', newWidth);
-		console.log('new scale', newScale);
-		currentScale.value = newScale;
-		width.value = newWidth;
+	let lastZoomTime = 0
+	let lastZoomDirection = 0
+	let zoomStreak = 0
+	const changeScale = (direction) => {
+		const now = performance.now()
+		zoomStreak = direction === lastZoomDirection && now - lastZoomTime < 450 ? zoomStreak + 1 : 0
+		lastZoomTime = now
+		lastZoomDirection = direction
+		const step = [1, 2, 5, 10, 20][Math.min(Math.floor(zoomStreak / 2), 4)]
+		displayScale.value = Number(displayScale.value) + direction * step
 	}
 
 	const pdfStyle = computed(() => {
 		return {
 			filter: settingsStore.currentTheme === 'dark' ? 'invert(0.8) hue-rotate(180deg) contrast(1)':'',
-			overflow: 'auto',
 		}
 	})
-
-	function debounce(func, delay) {
-		// A timer variable to track the delay period
-		let timer;
-		// Return a function that takes arguments
-		return function(...args) {
-			// Clear the previous timer if any
-			clearTimeout(timer);
-			// Set a new timer that will execute the function after the delay period
-			timer = setTimeout(() => {
-				// Apply the function with arguments
-				func.apply(this, args);
-			}, delay);
-		};
-	}
 
 	const displayScale = computed({
 		get: () => {
@@ -134,15 +162,12 @@
 			if (newScale < 0.01) {
 				newScale = 0.01;
 			}
-			let newWidth = width.value / currentScale.value * newScale / 100;
+			let newWidth = pageWidth.value * newScale / 100;
 			if (newWidth > 7000) {
 				newWidth = 7000
-				newScale = newWidth * 100 / width.value * currentScale.value;
+				newScale = newWidth * 100 / pageWidth.value;
 			}
-			console.log('new width', newWidth);
-			console.log('new scale', newScale);
 			currentScale.value = newScale / 100;
-			width.value = newWidth;
 		}
 	})
 
@@ -157,7 +182,12 @@
   />
   <div
     v-show="!loading"
+    ref="mainFrame"
     class="main-frame"
+    :class="{
+      'main-frame--pdf': contentStore.currentType === 'pdf',
+      'main-frame--html': contentStore.currentType === 'html',
+    }"
   >
     <div
       v-show="contentStore.currentType === 'pdf'"
@@ -166,31 +196,44 @@
       <div
         class="pdf-tool-bar"
       >
+        <div class="pdf-zoom-left">
+          <t-button variant="outline" @click="autoScale">自动缩放</t-button>
+          <t-button variant="outline" @click="changeScale(-1)">−</t-button>
+        </div>
         <t-input-number
           v-model="displayScale"
+          theme="normal"
           :decimal-places="2"
           :auto-width="true"
           align="right"
           suffix="%"
         />
+        <t-button class="pdf-zoom-in" variant="outline" @click="changeScale(1)">+</t-button>
+        <t-button class="pdf-download" variant="outline" @click="downloadPdf">下载 PDF</t-button>
       </div>
-      <VuePdfEmbed
-        ref="pdfEmbed"
-        annotation-layer
-        text-layer
-        :width="width"
-        :source="pdfSource"
-        :style="pdfStyle"
-        style="max-height: calc(100vh - 180px)"
-        @loaded="pdfLoaded"
-      />
+      <div ref="pdfScrollArea" class="pdf-scroll-area">
+        <div class="pdf-pages">
+          <VuePdfEmbed
+            ref="pdfEmbed"
+            annotation-layer
+            text-layer
+            :width="width"
+            :source="pdfSource"
+            :style="pdfStyle"
+            @loaded="pdfLoaded"
+          />
+        </div>
+      </div>
     </div>
-    <div v-show="contentStore.currentType === 'html'">
+    <div v-show="contentStore.currentType === 'html'" class="html-container">
       <iframe
         ref="iframeDom"
         class="iframe"
         :src="iframeURL"
-        :style="{filter: settingsStore.currentTheme === 'dark' ? 'invert(0.8) contrast(0.8)':''}"
+        :style="{
+          filter: settingsStore.currentTheme === 'dark' ? 'invert(0.8) contrast(0.8)':'',
+          pointerEvents: layoutStore.resizing ? 'none': 'auto', // prevent iframe event on resizing
+        }"
         @load="iframeLoaded"
       />
     </div>
@@ -211,13 +254,28 @@
 		width: 100%;
 	}
 	.main-frame {
+		box-sizing: border-box;
+		width: 100%;
+		min-width: 0;
 		height: calc(100vh - 132px);
 		max-height: calc(100vh - 132px);
 		overflow: auto;
+		&.main-frame--pdf {
+			overflow: hidden;
+			padding-left: 0;
+			padding-right: 0;
+		}
+		&.main-frame--html {
+			overflow: hidden;
+		}
 		padding-left: 32px;
 		padding-right: 32px;
+		.html-container {
+			height: 100%;
+		}
 		.iframe {
-			height: calc(100vh - 132px);
+			display: block;
+			height: 100%;
 			width: 100%;
 			border: 0;
 		}
@@ -230,15 +288,40 @@
 			align-content: center;
 		}
 		.pdf-container {
-			max-height: calc(100vh - 140px);
-			max-width: calc(100vw - 232px);
+			height: 100%;
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+		}
+		.pdf-scroll-area {
+			flex: 1;
+			min-height: 0;
+			min-width: 0;
 			overflow: auto;
 		}
+		.pdf-pages {
+			width: max-content;
+			margin-inline: auto;
+		}
 		.pdf-tool-bar {
-			display: flex;
+			flex: 0 0 48px;
+			position: relative;
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
 			align-items: center;
-			justify-content: center;
-			height: 48px;
+			.pdf-zoom-left {
+				justify-self: end;
+				display: flex;
+				align-items: center;
+			}
+			.pdf-zoom-in {
+				justify-self: start;
+			}
+			.pdf-download {
+				position: absolute;
+				right: 0;
+			}
 		}
 		.t-button {
 			margin-left: 4px;

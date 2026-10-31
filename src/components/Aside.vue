@@ -28,7 +28,8 @@
 	}
 
 	.transition {
-		min-width: 232px;
+		width: 100%;
+		min-width: 0;
 	}
 
 </style>

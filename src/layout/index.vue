@@ -1,26 +1,34 @@
 <script setup>
 import { Icon } from "tdesign-icons-vue-next";
 import { useLayoutStore, useSettingsStore } from "@/store/index.js"
-import { computed } from "vue"
+import { computed, ref, onMounted, onBeforeUnmount } from "vue"
 import MainFrame from "@/components/MainFrame.vue";
 import { useRoute, useRouter } from "vue-router";
 import Aside from "@/components/Aside.vue";
 
-const resizeHandleWidth = 16;
-
 const settingsStore = useSettingsStore()
 const layoutStore = useLayoutStore()
+const customerInfo = ref(null)
+
+onMounted(() => {
+	const script = document.createElement('script')
+	script.src = `${import.meta.env.BASE_URL}Data/Customers.js`
+	script.onload = () => {
+		customerInfo.value = window.Customers?.[0] ?? null
+		script.remove()
+	}
+	script.onerror = () => script.remove()
+	document.head.appendChild(script)
+})
 
 const router = useRouter();
 const route = useRoute();
 
 const themeChange = (e) => {
-	console.log("themeChange", e);
 	settingsStore.setTheme(e)
 }
 
 const languageChange = (e) => {
-	console.log("languageChange", e);
 	settingsStore.setLanguage(e)
 }
 
@@ -29,7 +37,6 @@ const menuValue = computed(() => {
 })
 
 const menuChanged = (e) => {
-	console.log("menuChanged", e);
 	router.push({name:e, params: {  } })
 }
 
@@ -37,32 +44,31 @@ const jumpToGithub = () => {
 	window.open('https://github.com/young-zy/eaipViewer');
 }
 
-const handleMouseDown = (e) => {
-	if (e.target.id !== "resizer") {
-		return;
-	}
-	console.log("resize start", e);
-	layoutStore.setResizing(true)
+const handlePointerMove = (e) => {
+	if (!layoutStore.resizing) return
+	layoutStore.setSidebarWidth(Math.max(100, Math.min(e.clientX, window.innerWidth - 200)))
 }
 
-const handleMouseMove = (e) => {
-	if (!layoutStore.resizing) {
-		return
-	}
-	console.log(e)
-	layoutStore.setSidebarWidth(e.clientX)
-}
-
-const handleMouseUp = (e) => {
-	console.log("mouse up")
-	if (!layoutStore.resizing) {
-		return
-	}
-	console.log("resize stop", e);
+const stopResizing = () => {
+	if (!layoutStore.resizing) return
 	layoutStore.setResizing(false)
+	document.documentElement.classList.remove('sidebar-resizing')
+	window.removeEventListener('pointermove', handlePointerMove)
+	window.removeEventListener('pointerup', stopResizing)
+	window.removeEventListener('pointercancel', stopResizing)
 }
 
+const startResizing = (e) => {
+	if (e.button !== 0) return
+	e.preventDefault()
+	layoutStore.setResizing(true)
+	document.documentElement.classList.add('sidebar-resizing')
+	window.addEventListener('pointermove', handlePointerMove)
+	window.addEventListener('pointerup', stopResizing)
+	window.addEventListener('pointercancel', stopResizing)
+}
 
+onBeforeUnmount(stopResizing)
 
 </script>
 
@@ -142,11 +148,7 @@ const handleMouseUp = (e) => {
         </template>
       </t-head-menu>
     </t-header>
-    <t-layout
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mousedown="handleMouseDown"
-    >
+    <t-layout>
       <t-aside
         class="aside"
         style="border-top: 1px solid var(--component-border);"
@@ -155,22 +157,24 @@ const handleMouseUp = (e) => {
         <Aside />
       </t-aside>
       <div
-        id="resizer"
-        style="cursor: col-resize;"
-        :style="{width: resizeHandleWidth + 'px'}"
+        class="resizer"
+        role="separator"
+        aria-orientation="vertical"
+        @pointerdown="startResizing"
       />
-      <t-layout>
+      <t-layout class="reader-layout">
         <t-content class="content">
           <MainFrame />
         </t-content>
         <t-footer class="footer">
+          <div v-if="customerInfo" class="data-info">
+            {{ customerInfo.DataName }} · {{ customerInfo.DataVersion }} · 发布：{{ customerInfo.PublishDate }} · 生效：{{ customerInfo.EffectiveShow }}
+          </div>
           <div>
             Copyright @ 2024-{{ new Date().getFullYear() }}. All Rights Reserved
           </div>
-          <div style="display: flex;">
-            <p>
-              Source:
-            </p>
+          <div class="source-link">
+            Source:
             <Icon
               size="16px"
               class="github-icon"
@@ -185,19 +189,55 @@ const handleMouseUp = (e) => {
 </template>
 
 <style scoped lang="less">
+	.resizer {
+		flex: 0 0 auto;
+		width: 32px;
+		cursor: col-resize;
+		touch-action: none;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background: var(--td-bg-color-container, #fff);
+		border-right: 1px solid var(--component-border);
+		box-sizing: border-box;
+	}
+	.resizer::before {
+		content: '';
+		width: 6px;
+		height: 48px;
+		border-radius: 4px;
+		background: var(--td-brand-color);
+	}
+	.resizer:hover::before, :global(.sidebar-resizing) .resizer::before {
+		background-color: var(--td-brand-color-hover, var(--td-brand-color));
+	}
+	:global(.sidebar-resizing), :global(.sidebar-resizing *) {
+		user-select: none !important;
+		cursor: col-resize !important;
+	}
 	.language-picker {
 		margin-right: 8px;
 	}
 
 	.aside {
 		display: flex;
+		flex: 0 0 auto;
+		box-sizing: border-box;
+		border-right: 1px solid var(--component-border);
 		height: calc(100vh - 57px);
 		width: 232px;
-		overflow: auto;
+		min-width: 0;
+		overflow-x: auto;
+		overflow-y: hidden;
 	}
 
 	.content {
-		max-width:  calc(100vw - 232px);
+		min-width: 0;
+		width: 100%;
+	}
+	.reader-layout {
+		min-width: 0;
+		flex: 1;
 	}
 
 	:deep(.t-menu__operations){
@@ -208,7 +248,19 @@ const handleMouseUp = (e) => {
 		flex-direction: column;
 		align-items: center;
 		max-height: 70px;
-		padding: 8px;
+		padding: 4px 8px;
+		line-height: 18px;
+		.data-info {
+			max-width: 100%;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.source-link {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
 		.github-icon {
 			cursor: pointer;
 			align-self: center;

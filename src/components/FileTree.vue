@@ -24,14 +24,12 @@
 
 	const loading = ref(false);
 
-	const onActive = (value, {node, e, trigger}) => {
-		console.log("onActive",value, node.data, e, trigger);
+	const onActive = (value, {node}) => {
 		checkAndSetContent(node)
 	}
 
 	const checkAndSetContent = (node) => {
 		if (node && node.data) {
-			// console.log("node: ",node)
 			let contentPath, contentEnPath, type;
 			if (node.data.htmlPath) {
 				contentPath = node.data.htmlPath
@@ -42,7 +40,7 @@
 				contentEnPath = node.data.pdfPath
 				type = 'pdf'
 			}
-			contentStore.setContent(contentPath, contentEnPath, type)
+			contentStore.setContent(contentPath, contentEnPath, type, node.data.name_cn, node.data.name)
 			router.push({ name: route.name, params: {id: node.data.id} })
 		}
 	}
@@ -63,7 +61,7 @@
     },
 	}
 
-	const loadData = async (url, varName) => {
+	const loadData = async (url, _) => {
 		loading.value = true;
 		const resp = await fetch(url)
 		if (resp.status === 200) {
@@ -85,9 +83,7 @@
 	}
 
 	watch([() => route.name, () => route.params.id], async (newVal, oldValue) => {
-		console.log(newVal, oldValue)
 		if (newVal[0] !== oldValue[0]) {
-			console.log(newVal, oldValue)
 			if (config[newVal[0]]) {
 				await loadData(config[newVal[0]].url)
 				// check if id exists
@@ -106,7 +102,6 @@
 				scrollTo(node)
 			}
 			// treeInstance.value.scrollTo({key: route.params.id})
-			// console.log('scrolled');
 			checkAndSetContent(node)
 		}
 	}, {immediate: true})
@@ -142,7 +137,7 @@
       <t-input
         v-model="filterStr"
         placeholder=""
-        style="max-width: 172px;"
+        style="width: 100%;"
         :clearable="true"
         @blur="filterChange"
         @clear="filterChange"
@@ -202,10 +197,11 @@
 
 <style scoped lang="less">
 	.tree {
-		min-width: 232px;
+		width: 100%;
+		min-width: 0;
 	}
 	.loading {
-		min-width: 232px;
+		width: 100%;
 	}
 
   :deep(.t-tree__label) {

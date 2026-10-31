@@ -1,7 +1,8 @@
 <script setup>
-	import {ref, watch} from "vue"
+	import {ref, watch, computed} from "vue"
 	import { useRoute, useRouter } from "vue-router";
-	import { useContentStore } from "@/store/index.js";
+	import { useContentStore, useSettingsStore } from "@/store/index.js";
+	import { uiText } from '@/util/uiText.js'
 
 	const route = useRoute()
 
@@ -9,7 +10,8 @@
 
 	const data = ref([])
 
-	const columns = ref([])
+	const settingsStore = useSettingsStore()
+	const text = computed(() => uiText[settingsStore.currentLanguage])
 
 	const rowKey = ref('')
 
@@ -42,11 +44,11 @@
 			columns: [
 				{
 					colKey: 'SeriesName',
-					title: '名称',
+					titleKey: 'name',
 				},
 				{
 					colKey: 'GenerateTime',
-					title: '生成时间'
+					titleKey: 'generatedAt'
 				}
 			]
 		},
@@ -57,16 +59,16 @@
 			columns: [
 				{
 					colKey: 'Serial',
-					title: 'NR/Year',
+					titleKey: 'numberYear',
 					width: '56px',
 				},
 				{
 					colKey: 'Pub_Date',
-					title: 'Published on'
+					titleKey: 'publishedOn'
 				},
 				{
 					colKey: 'Subject',
-					title: 'Subject'
+					titleKey: 'subject'
 				}
 			]
 		},
@@ -77,20 +79,24 @@
 			columns: [
 				{
 					colKey: 'Serial',
-					title: 'NR/Year',
+					titleKey: 'numberYear',
 					width: '56px',
 				},
 				{
 					colKey: 'Subject',
-					title: 'Subject'
+					titleKey: 'subject'
 				},
 				{
 					colKey: 'period',
-					title: 'Period of validity'
+					titleKey: 'validity'
 				},
 			]
 		}
 	}
+	const columns = computed(() => (config[route.name]?.columns ?? []).map(({ titleKey, ...column }) => ({
+		...column,
+		title: text.value[titleKey],
+	})))
 
 	const loadData = async (url, varName) => {
 		loading.value = true;
@@ -107,7 +113,6 @@
 			if (conf) {
 				await loadData(conf.url, conf.varName);
 				rowKey.value = conf.rowKey;
-				columns.value = conf.columns;
 			}
 		}
 		if (newVal[1]) {
@@ -140,9 +145,9 @@
     @select-change="selectChange"
   >
     <template #period="{ row }">
-      <p>from {{ row.Effective_Time }}(UTC)</p>
+      <p>{{ text.from }} {{ row.Effective_Time }}(UTC)</p>
       <p v-if="row.Out_Date">
-        to {{ row.Out_Date }}(UTC)
+        {{ text.to }} {{ row.Out_Date }}(UTC)
       </p>
     </template>
   </t-table>
